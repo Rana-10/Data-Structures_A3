@@ -152,57 +152,85 @@ public:
         return current;
     }
 
-
-        // Load games from file
-    void loadFromFile(const string& filename)
+    // Save Data to File (Preorder)
+    void save_pre_order_traversal(node* root, ofstream& file)
     {
-        ifstream file(filename);
-        if (!file)
+        if (root == NULL)
         {
-            cerr << "** There was an error opening the file **" << endl;
+            return;
+        } 
+        file << root->game_id << "," << root->game_name << "," << root->game_publisher << "," << root->game_dev << endl;
+        save_pre_order_traversal(root->left_ptr, file);
+        save_pre_order_traversal(root->right_ptr, file);
+    }
+
+    void save_to_file(const string& filename) 
+    {
+        ofstream file(filename);
+        if (!file) {
+            cerr << "**Error**, There's an issue opening file for saving!" << endl;
             return;
         }
+        save_pre_order_traversal(root, file);
+        file.close();
+        cout << "Data successfully saved to " << filename << endl;
+    }
 
+    void load_from_file(const string& filename) 
+    {
+        int seed = 232651;
+        ifstream file(filename);
+        if (!file) {
+            cerr << "Error opening file!" << endl;
+            return;
+        }
+        srand(seed);
         string line;
         while (getline(file, line)) {
+            if (rand() % 1000 + 1 < (seed % 100) * 10 + 100) {
+                continue; 
+            }
             stringstream ss(line);
             string id, name, pub, dev;
-
             getline(ss, id, ',');
             getline(ss, name, ',');
             getline(ss, pub, ',');
             getline(ss, dev, ',');
-
-            // inserting game into tree
             insert(id, name, pub, dev);
         }
         file.close();
+    }
+
+    void show_n_layers(node* root, int current_lvl, int max_lvl) 
+    {
+        if (root == NULL || current_lvl > max_lvl)
+        {
+            return;
+        } 
+        cout << "Level " << current_lvl << "-> " << root->game_id << " - " << root->game_name << endl;
+        show_n_layers(root->left_ptr, current_lvl + 1, max_lvl);
+        show_n_layers(root->right_ptr, current_lvl + 1, max_lvl);
+    }
+
+    void show_n_layers(int max_lvl) 
+    {
+        show_n_layers(root, 1, max_lvl);
     }
 
 };
 
 int main()
 {
-    srand(232651);
-    int rand_num;
-    rand_num = rand() % 1000 + 1;
-
-    if(rand_num < 51 * 10 + 100)
-    {
-        // skip
-    }
-    else
-    {
-        // read
-    }
-
-
     cout << "** WELCOME TO THE PROGRAM **" << endl;
 
     tree gameTree;
-    gameTree.loadFromFile("Games.txt");
+    gameTree.load_from_file("Games.txt");
 
-    cout << "\nInorder Traversal of Games:\n";
+    cout << endl;
+    cout << endl;
+
+    cout << "Inorder Traversal of Games -> ";
+    cout <<endl;
     gameTree.inorder();
 
     return 0;
