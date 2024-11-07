@@ -200,10 +200,27 @@ public:
         cout << "Data successfully saved to " << filename << endl;
     }
 
+    bool isNumber(const string& str) 
+    {
+        if (str.empty())
+        {
+            return false;
+        } 
+
+        for (int i = 0; i < str.length(); i++) 
+        {
+            if (!isdigit(str[i]) && str[i] != '.') 
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void load_from_file(const string& filename) 
     {
         int seed = 232651;
-        ifstream file(filename);
+        ifstream file("pre_order_traversal.txt");
         if (!file) {
             cerr << "Error opening file!" << endl;
             return;
@@ -216,10 +233,13 @@ public:
             {
                 continue; 
             }
+
+
             stringstream ss(line);
-            string id, name, pub, dev, size_gbs_str, downloads_str;
-            float size_gbs = stof(size_gbs_str);
-            int downloads = stoi(downloads_str);
+            string id, name, pub, dev;
+            string size_gbs_str, downloads_str;
+            float size_gbs = 0;
+            int downloads = 0;
             getline(ss, id, ',');
             getline(ss, name, ',');
             getline(ss, pub, ',');
@@ -227,6 +247,29 @@ public:
             getline(ss, size_gbs_str, ',');
             getline(ss, downloads_str, ',');
             insert(id, name, pub, dev, size_gbs, downloads );
+
+            if (isNumber(size_gbs_str)) // conversion
+            {
+                size_gbs = stof(size_gbs_str);
+            } 
+            else 
+            {
+                cout << "Invalid size for game " << id << ". Resetting to 0" << endl;
+                size_gbs = 0.0;
+            }
+
+            if (isNumber(downloads_str)) 
+            {
+                downloads = stoi(downloads_str);
+            } 
+            else 
+            {
+                cout << "Invalid size for game " << id << ". Resetting to 0" << endl;
+                downloads = 0;
+            }
+
+            // Insert the game into the tree
+            insert(id, name, pub, dev, size_gbs, downloads);        
         }
         file.close();
     }
@@ -315,6 +358,7 @@ public:
     string pass;
     int games_count;
     int games_played;
+    string game_id_arr[50];
     player* next;
 
     player(string naam, string _id, string phone_no, string e, string pw) 
@@ -329,27 +373,28 @@ public:
         next = NULL;
     }
 
-    // void addGame(string game_id) 
-    // {
-    //     if (games_count < 25) { // Limit to 10 games for simplicity
-    //         game_ids[game_count++] = game_id;
-    //     }
-    // }
+    void addGame(string game_id) 
+    {
+        if (games_count < 50) 
+        {
+            game_id_arr[games_count++] = game_id;
+        }
+    }
 
-    // void display_details() 
-    // {
-    //     cout << "Player ID -> " << player_id << endl;
-    //     cout << "Player Name -> " << name << endl;
-    //     cout << "Player Phone -> " << phone_num << endl;
-    //     cout << "Player Email -> " << email << endl;
-    //     cout << "Games Played -> " << games_played << endl;
-    //     cout << "Games -> ";
-    //     for (int i = 0; i < game_count; i++) 
-    //     {
-    //         cout << game_ids[i] << (i < game_count - 1 ? ", " : "");
-    //     }
-    //     cout << endl;
-    // }
+    void display_details() 
+    {
+        cout << "Player ID -> " << player_id << endl;
+        cout << "Player Name -> " << name << endl;
+        cout << "Player Phone -> " << phone_num << endl;
+        cout << "Player Email -> " << email << endl;
+        cout << "Games Played -> " << games_played << endl;
+        cout << "Games -> ";
+        for (int i = 0; i < games_count; i++) 
+        {
+            cout << game_id_arr[i] << (i < games_count - 1 ? ", " : "");
+        }
+        cout << endl;
+    }
 };
 
 class player_ll 
@@ -418,19 +463,54 @@ public:
     }
 };
 
-int main()
+int main() 
 {
-    cout << "** WELCOME TO THE PROGRAM **" << endl;
+    tree game_tree;
+    player_ll player_list;
 
-    tree gameTree;
-    gameTree.load_from_file("Games.txt");
+    game_tree.insert("ABX01", "Red Dead Redemption 2", "Rockstar Games", "RG", 65.5, 11000);
+    game_tree.insert("ABX02", "Forza Horizon 5", "Microsoft Studios", "MS", 74.0, 6000);
+    game_tree.insert("ABX03", "Fortnite", "Epic Games", "EG", 50, 9000);
 
-    cout << endl;
-    cout << endl;
+    cout << "Displaying games in, in-order traversal system ->" << endl; // displaying games in tree 
+    game_tree.inorder();
 
-    cout << "Inorder Traversal of Games -> ";
+    game_tree.save_to_file("game_data.txt");
+    game_tree.load_from_file("game_data.txt"); // saving and loading data
+
+    player_list.add_update("PX01", "Hassan", "03325109284", "hassan@gmail.com", "hello321");
+    player_list.add_update("PX02", "Haroon", "03335010287", "harooon@gmail.com", "hello123");
+
+    player_list.add_update("PX01");
+    player_list.add_update("PX02"); // adding more games
+
+    player_list.showTopNPlayers(3);
+
+
+    string search_id = "ABX02";
+    game_node* found_game = game_tree.search(game_tree.root, search_id);
     cout <<endl;
-    gameTree.inorder();
+    cout <<endl;
+    if (found_game != NULL) 
+    {
+        cout << "Found Game -> " << found_game->game_name << endl;
+    } 
+    else 
+    {
+        cout << "Game with ID -> " << search_id << " not found." << endl;
+    }
+
+    string edit_game_id = "ABX03"; // ediitng game id
+    game_tree.edit_entry(edit_game_id, "ABX03", "Updated Game Three", "Updated Publisher", "Updated Developer");
+
+    game_tree.inorder();
+
+    string delete_game_id = "ABX01"; // deletion of a game by its ID
+    game_tree.root = game_tree.del_node(game_tree.root, delete_game_id);
+
+    cout <<endl;
+    cout << "After deleting game with ID " << delete_game_id <<  " -> " << endl;
+    game_tree.inorder();
 
     return 0;
 }
