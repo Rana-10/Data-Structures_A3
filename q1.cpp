@@ -1,3 +1,8 @@
+// Muhammad Azmat
+// 23i-2651
+// DS-C
+// A3
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -6,22 +11,41 @@
 
 using namespace std;
 
-class node 
+class games_played
+{
+    public:
+    string game_id;
+    float hrs_played;
+    int achievements_unlocked;
+
+    games_played(string id)
+    {
+        game_id = id;
+        hrs_played = 0;
+        achievements_unlocked  = 0;
+    }
+};
+
+class game_node 
 {
 public:
     string game_id;
     string game_name;
     string game_publisher;
     string game_dev;
-    node* left_ptr;
-    node* right_ptr;
+    float size_gbs;
+    int downloads;
+    game_node* left_ptr;
+    game_node* right_ptr;
 
-    node(string _id, string _name, string _pub, string _dev)
+    game_node(string _id, string _name, string _pub, string _dev, float size, int downl)
     {
         game_id = _id;
         game_name = _name;
         game_publisher = _pub;
         game_dev = _dev;
+        size_gbs = size;
+        downloads = downl;
         left_ptr = NULL;
         right_ptr = NULL;
     }
@@ -31,47 +55,47 @@ public:
 class tree
 {
 public:
-    node* root;
+    game_node* root;
 
     tree()
     {
         root = NULL;
     }
 
-    node* insert(node* _node, string id, string name, string pub, string dev) //  new entry ki insertion ho rhi hai
+    game_node* insert(game_node* _node, string id, string name, string pub, string dev, float size, int download) //  new entry ki insertion ho rhi hai
     {
         if (_node == NULL)
         {
-            return new node(id, name, pub, dev);
+            return new game_node(id, name, pub, dev, size, download);
         }
         if (id < _node->game_id)
         {
-            _node->left_ptr = insert(_node->left_ptr, id, name, pub, dev);
+            _node->left_ptr = insert(_node->left_ptr, id, name, pub, dev, size, download);
         } 
         else
         {
             if (id > _node->game_id)
             {
-                _node->right_ptr = insert(_node->right_ptr, id, name, pub, dev);
+                _node->right_ptr = insert(_node->right_ptr, id, name, pub, dev, size, download);
             }
         }
         return _node;
     }
 
-    void insert(string id, string name, string pub, string dev)
+    void insert(string id, string name, string pub, string dev, float size, int download)
     {
-        root = insert(root, id, name, pub, dev);
+        root = insert(root, id, name, pub, dev, size, download);
     }
 
-    void inorder(node* root) 
+    void inorder(game_node* root) 
     {
         if (root != NULL)
         {
             inorder(root->left_ptr);
             cout << "Game ID -> " << root->game_id <<endl;
             cout << "Game Name -> " << root->game_name<<endl;
-            cout << "Publisher -> " << root->game_publisher<<endl;
-            cout << "Developer -> " << root->game_dev << endl;
+            cout << "Game Publisher -> " << root->game_publisher<<endl;
+            cout << "Game Developer -> " << root->game_dev << endl;
             inorder(root->right_ptr);
         }
     }
@@ -81,7 +105,7 @@ public:
         inorder(root);
     }
 
-    node* search(node* root, const string& id)
+    game_node* search(game_node* root, const string& id)
     {
         if (root == NULL || root->game_id == id)
         {
@@ -101,7 +125,7 @@ public:
         }
     }
 
-    node* deleteNode(node* root, string id)
+    game_node* del_node(game_node* root, string id)
     {
         if (root == NULL)
         {
@@ -110,19 +134,19 @@ public:
             
         if (id < root->game_id) 
         {
-            root->left_ptr = deleteNode(root->left_ptr, id);
+            root->left_ptr = del_node(root->left_ptr, id);
         }
         else
         {
             if (id > root->game_id) 
             {
-                root->right_ptr = deleteNode(root->right_ptr, id);
+                root->right_ptr = del_node(root->right_ptr, id);
             }
             else    
             {
                 if (root->left_ptr == NULL)
                 {
-                    node* temp = root->right_ptr;
+                    game_node* temp = root->right_ptr;
                     delete root;
                     return temp;
                 }
@@ -130,30 +154,30 @@ public:
                 {
                     if (root->right_ptr == NULL) 
                     {
-                        node* temp = root->left_ptr;
+                        game_node* temp = root->left_ptr;
                         delete root;
                         return temp;
                     }
 
                 }
-                node* temp = minValueNode(root->right_ptr);
+                game_node* temp = min_val_node(root->right_ptr);
                 root->game_id = temp->game_id;
-                root->right_ptr = deleteNode(root->right_ptr, temp->game_id);
+                root->right_ptr = del_node(root->right_ptr, temp->game_id);
             }
             return root;
         }
     }
 
-    node* minValueNode(node* root)
+    game_node* min_val_node(game_node* root)
     {
-        node* current = root;
+        game_node* current = root;
         while (current && current->left_ptr != NULL)
             current = current->left_ptr;
         return current;
     }
 
     // Save Data to File (Preorder)
-    void save_pre_order_traversal(node* root, ofstream& file)
+    void save_pre_order_traversal(game_node* root, ofstream& file)
     {
         if (root == NULL)
         {
@@ -166,7 +190,7 @@ public:
 
     void save_to_file(const string& filename) 
     {
-        ofstream file(filename);
+        ofstream file("pre_order_traversal.txt");
         if (!file) {
             cerr << "**Error**, There's an issue opening file for saving!" << endl;
             return;
@@ -186,22 +210,28 @@ public:
         }
         srand(seed);
         string line;
-        while (getline(file, line)) {
-            if (rand() % 1000 + 1 < (seed % 100) * 10 + 100) {
+        while (getline(file, line)) 
+        {
+            if (rand() % 1000 + 1 < (seed % 100) * 10 + 100) 
+            {
                 continue; 
             }
             stringstream ss(line);
-            string id, name, pub, dev;
+            string id, name, pub, dev, size_gbs_str, downloads_str;
+            float size_gbs = stof(size_gbs_str);
+            int downloads = stoi(downloads_str);
             getline(ss, id, ',');
             getline(ss, name, ',');
             getline(ss, pub, ',');
             getline(ss, dev, ',');
-            insert(id, name, pub, dev);
+            getline(ss, size_gbs_str, ',');
+            getline(ss, downloads_str, ',');
+            insert(id, name, pub, dev, size_gbs, downloads );
         }
         file.close();
     }
 
-    void show_n_layers(node* root, int current_lvl, int max_lvl) 
+    void show_n_layers(game_node* root, int current_lvl, int max_lvl) 
     {
         if (root == NULL || current_lvl > max_lvl)
         {
@@ -217,6 +247,175 @@ public:
         show_n_layers(root, 1, max_lvl);
     }
 
+    bool edit_entry(game_node*& root, const string& id, const string& new_id, const string& new_name, const string& new_pub, const string& new_dev) 
+    {
+        if (root == NULL)
+        {
+            return false;
+        } 
+
+        if (root->game_id == id) 
+        {
+            if (id != new_id) 
+            {
+                game_node* brand_new_node = root;
+                root = del_node(root, id);
+
+                brand_new_node->game_id = new_id;
+                brand_new_node->game_name = new_name;
+                brand_new_node->game_publisher = new_pub;
+                brand_new_node->game_dev = new_dev;
+                // inserting new details in again
+                insert(brand_new_node->game_id, brand_new_node->game_name, brand_new_node->game_publisher, brand_new_node->game_dev, brand_new_node->size_gbs, brand_new_node->downloads);
+            }
+            else 
+            {
+                root->game_name = new_name;
+                root->game_publisher = new_pub;
+                root->game_dev = new_dev;
+            }
+            return true;
+        }
+
+        if (id < root->game_id) 
+        {
+            return edit_entry(root->left_ptr, id, new_id, new_name, new_pub, new_dev);
+        } 
+        else 
+        {
+            if(id > root->game_id)
+            {
+                return edit_entry(root->right_ptr, id, new_id, new_name, new_pub, new_dev);
+            }
+        }
+
+    }
+
+    void edit_entry(const string& id, const string& new_id, const string& new_name, const string& new_pub, const string& new_dev) 
+    {
+        if (edit_entry(root, id, new_id, new_name, new_pub, new_dev)) 
+        {
+            cout << "Game ID " << id << " has been updated successfully." << endl;
+        } 
+        else 
+        {
+            cout << "Game ID " << id << " could not be found." << endl;
+        }
+    }
+
+};
+
+class player 
+{
+public:
+    string name;
+    string player_id;
+    string phone_num;
+    string email;
+    string pass;
+    int games_count;
+    int games_played;
+    player* next;
+
+    player(string naam, string _id, string phone_no, string e, string pw) 
+    {
+        name  = naam;
+        player_id = _id;
+        phone_num = phone_no;
+        email = e;
+        pass = pw;
+        games_count = 0;
+        games_played = 1;
+        next = NULL;
+    }
+
+    // void addGame(string game_id) 
+    // {
+    //     if (games_count < 25) { // Limit to 10 games for simplicity
+    //         game_ids[game_count++] = game_id;
+    //     }
+    // }
+
+    // void display_details() 
+    // {
+    //     cout << "Player ID -> " << player_id << endl;
+    //     cout << "Player Name -> " << name << endl;
+    //     cout << "Player Phone -> " << phone_num << endl;
+    //     cout << "Player Email -> " << email << endl;
+    //     cout << "Games Played -> " << games_played << endl;
+    //     cout << "Games -> ";
+    //     for (int i = 0; i < game_count; i++) 
+    //     {
+    //         cout << game_ids[i] << (i < game_count - 1 ? ", " : "");
+    //     }
+    //     cout << endl;
+    // }
+};
+
+class player_ll 
+{
+private:
+    player* head_ptr;
+
+public:
+    player_ll() 
+    {
+        head_ptr = NULL;
+    }
+
+    void add_update(string player_id, string naam = "", string phone_no = "", string e = "", string pw = "") 
+    {
+        player* temp = head_ptr;
+        player* prev_ptr = NULL;
+
+        while (temp != NULL && temp->player_id != player_id) 
+        {
+            temp = temp->next;
+            prev_ptr = temp;
+        }
+
+        if (temp != NULL)  // means player found so increment no of games
+        {
+            temp->games_played+=1;
+        } 
+        else
+        {
+            // player not found, create new game_node and add to list
+
+            // insertion in LL basically
+            player* new_gamer = new player(naam, player_id, phone_no, e, pw);
+            if (head_ptr == NULL || head_ptr->games_played <= new_gamer->games_played) 
+            {
+                new_gamer->next = head_ptr;
+                head_ptr = new_gamer;
+            } 
+            else 
+            {
+                player* temp = head_ptr;
+                while (temp->next != NULL && temp->next->games_played >= new_gamer->games_played) 
+                {
+                    temp = temp->next;
+                }
+                new_gamer->next = temp->next;
+                temp->next = new_gamer;
+            }
+        }
+    }
+
+    void showTopNPlayers(int N) 
+    {
+        player* temp = head_ptr;
+        int count = 0;
+
+        cout << "Top " << N << " players -> "<<endl;
+        while (temp != NULL && count < N) 
+        {
+            cout << "Player ID -> " << temp->player_id <<endl;
+            cout << "Games Played -> " << temp->games_played << endl;
+            temp = temp->next;
+            count++;
+        }
+    }
 };
 
 int main()
