@@ -34,8 +34,8 @@ The system supports the following functionalities:
 
 ## File Structure
 
-- `game_management_system.cpp` - Main file with the implementation of the game tree, player list, and their associated functions.
-- `game_data.txt` - Sample data file where game data is saved.
+- `DS_C_A3_i232651.cpp` - Main file with the implementation of the game tree, player list, and their associated functions.
+- `pre_order_traversal.txt` - Sample data file where game data is saved.
   
 ## Compilation and Execution
 
